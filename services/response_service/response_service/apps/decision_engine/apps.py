@@ -1,0 +1,5 @@
+from django.apps import AppConfig
+
+class DecisionEngineConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'response_service.apps.decision_engine'

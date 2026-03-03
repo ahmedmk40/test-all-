@@ -1,0 +1,171 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14
+    container_name: fraud_detection_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fraud_detection
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fraud_detection_network
+
+  # Redis for Caching and Message Broker
+  redis:
+    image: redis:7
+    container_name: fraud_detection_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - fraud_detection_network
+
+  # API Gateway Service
+  api_gateway:
+    build:
+      context: ../../services/api_gateway
+    container_name: fraud_detection_api_gateway
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8000:8000"
+    networks:
+      - fraud_detection_network
+
+  # Transaction API Service
+  transaction_api:
+    build:
+      context: ../../services/transaction_api
+    container_name: fraud_detection_transaction_api
+    depends_on:
+      - postgres
+      - redis
+      - signal_service
+    networks:
+      - fraud_detection_network
+
+  # Signal Service
+  signal_service:
+    build:
+      context: ../../services/signal_service
+    container_name: fraud_detection_signal_service
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fraud_detection_network
+
+  # Block Service
+  block_service:
+    build:
+      context: ../../services/block_service
+    container_name: fraud_detection_block_service
+    depends_on:
+      - postgres
+      - redis
+      - signal_service
+    networks:
+      - fraud_detection_network
+
+  # Rule Service
+  rule_service:
+    build:
+      context: ../../services/rule_service
+    container_name: fraud_detection_rule_service
+    depends_on:
+      - postgres
+      - redis
+      - signal_service
+    networks:
+      - fraud_detection_network
+
+  # Velocity Service
+  velocity_service:
+    build:
+      context: ../../services/velocity_service
+    container_name: fraud_detection_velocity_service
+    depends_on:
+      - postgres
+      - redis
+      - signal_service
+    networks:
+      - fraud_detection_network
+
+  # ML Service
+  ml_service:
+    build:
+      context: ../../services/ml_service
+    container_name: fraud_detection_ml_service
+    depends_on:
+      - postgres
+      - redis
+      - signal_service
+    networks:
+      - fraud_detection_network
+
+  # AML Service
+  aml_service:
+    build:
+      context: ../../services/aml_service
+    container_name: fraud_detection_aml_service
+    depends_on:
+      - postgres
+      - redis
+      - signal_service
+    networks:
+      - fraud_detection_network
+
+  # Response Service
+  response_service:
+    build:
+      context: ../../services/response_service
+    container_name: fraud_detection_response_service
+    depends_on:
+      - postgres
+      - redis
+      - signal_service
+    networks:
+      - fraud_detection_network
+
+  # Admin Portal Frontend
+  admin_portal:
+    build:
+      context: ../../frontend/admin_portal
+    container_name: fraud_detection_admin_portal
+    ports:
+      - "3000:3000"
+    networks:
+      - fraud_detection_network
+
+  # Analyst Portal Frontend
+  analyst_portal:
+    build:
+      context: ../../frontend/analyst_portal
+    container_name: fraud_detection_analyst_portal
+    ports:
+      - "3001:3000"
+    networks:
+      - fraud_detection_network
+
+  # Compliance Portal Frontend
+  compliance_portal:
+    build:
+      context: ../../frontend/compliance_portal
+    container_name: fraud_detection_compliance_portal
+    ports:
+      - "3002:3000"
+    networks:
+      - fraud_detection_network
+
+networks:
+  fraud_detection_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
